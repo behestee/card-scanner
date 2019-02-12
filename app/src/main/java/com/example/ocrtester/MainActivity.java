@@ -8,6 +8,8 @@ import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import com.google.android.gms.common.api.CommonStatusCodes;
+
 import dev.behestee.ocreader.OcrCaptureActivity;
 
 /**
@@ -81,7 +83,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == RC_OCR_CAPTURE) {
-            if (resultCode == Activity.RESULT_OK) {
+            if (resultCode == CommonStatusCodes.SUCCESS) {
                 if (data != null) {
                     String text = data.getStringExtra(OcrCaptureActivity.TextBlockObject);
                     statusMessage.setText(R.string.ocr_success);
@@ -93,7 +95,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }
             } else {
                 statusMessage.setText(String.format(getString(R.string.ocr_error),
-                        resultCode+""));
+                        CommonStatusCodes.getStatusCodeString(resultCode)));
             }
         }
         else {
