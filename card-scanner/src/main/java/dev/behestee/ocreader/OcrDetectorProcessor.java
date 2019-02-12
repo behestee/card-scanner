@@ -15,11 +15,15 @@
  */
 package dev.behestee.ocreader;
 
+import android.util.Log;
 import android.util.SparseArray;
 
+import dev.behestee.ocreader.interfaces.DetectorResultInterface;
 import dev.behestee.ocreader.ui.camera.GraphicOverlay;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
+
+import java.util.ArrayList;
 
 /**
  * A very simple Processor which receives detected TextBlocks and adds them to the overlay
@@ -27,10 +31,16 @@ import com.google.android.gms.vision.text.TextBlock;
  */
 public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
-    private GraphicOverlay<OcrGraphic> mGraphicOverlay;
+    private static final String TAG = "OcrDetectorProcessor";
 
-    OcrDetectorProcessor(GraphicOverlay<OcrGraphic> ocrGraphicOverlay) {
+    private GraphicOverlay<OcrGraphic> mGraphicOverlay;
+    private DetectorResultInterface detectorResultInterface;
+    ArrayList<String> patterns;
+
+    OcrDetectorProcessor(GraphicOverlay<OcrGraphic> ocrGraphicOverlay, DetectorResultInterface detectorResultInterface, ArrayList<String> patterns) {
         mGraphicOverlay = ocrGraphicOverlay;
+        this.detectorResultInterface = detectorResultInterface;
+        this.patterns = patterns;
     }
 
     /**
@@ -44,10 +54,28 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
     public void receiveDetections(Detector.Detections<TextBlock> detections) {
         mGraphicOverlay.clear();
         SparseArray<TextBlock> items = detections.getDetectedItems();
+        String textValue = "";
+
         for (int i = 0; i < items.size(); ++i) {
             TextBlock item = items.valueAt(i);
-            OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, item);
-            mGraphicOverlay.add(graphic);
+//            OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, item);
+//            mGraphicOverlay.add(graphic);
+
+            if (patterns.size() > 0){
+                for (String ithPattern:patterns) {
+                    if (item.getValue().matches(ithPattern)) {
+                        textValue = item.getValue();
+                        Log.i(TAG, textValue);
+                        OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, item);
+                        mGraphicOverlay.clear();
+                        mGraphicOverlay.add(graphic);
+                        detectorResultInterface.onMatchFound(textValue);
+                        break;
+                    }
+
+                }
+
+            }
         }
     }
 
